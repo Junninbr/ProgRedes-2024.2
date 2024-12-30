@@ -33,4 +33,4 @@ while True:
     else:
         print("Erro: Arquivo desejado não existe ou não foi encotrado.")
 
-udpSock.close
+udpSock.clos
