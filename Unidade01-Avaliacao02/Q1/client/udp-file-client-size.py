@@ -1,29 +1,36 @@
-import socket 
+import socket
 
-server= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-ip = "192.168.1.6" 
-porta= 65432 
-server_address= (ip, porta)
+SERVER = '192.168.1.6'
+PORT = 3456
+DIRETORIO = "files/"
 
-server.bind(server_address) 
+udpSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-print(f'Servidor aguardando solicitações em {ip}:{porta}')
+while True:
+    nomeArq = input("Digite o nome do arquivo desejado: ")
 
-while True: 
-    filename, client_address = server.recvfrom(1024)
-    filename= filename.decode 
+    print ("Enviando pedido a", (SERVER, PORT), "para", nomeArq)
+    udpSock.sendto(nomeArq.encode('utf-8'), (SERVER, PORT))
 
-    if filename: 
-        try: 
-            with open (filename, 'rb') as file: 
-                file.seek(0, 2)
-                tam = file.tell()
-            print(f'Enviando o tamanho do arquivo {filename } ({tam} bytes) ao cliente {client_address}')
-            server.sendto(str(tam).encode(), client_address)
-        
-        except FileNotFoundError: 
-            print(f'O arquivo solicitado {filename} não foi encontrado no servidor {server_address}')
-            
-    else: 
-        print(f'Nenhum arquivo foi solicitado pelo cliente {client_address}')
-        server.sendto(b'Nenhum arquivo especificado!', client_address)
+    dataTam, source = udpSock.recvfrom(1024)
+    try:
+        tamArq = int(dataTam.decode('utf-8'))
+    except ValueError:
+        print("Erro: Não foi possível receber o tamanho do arquivo ou não foi encontrado.")
+        continue
+
+    if tamArq > 0:
+        print("Salvando o arquivo localmente...")
+        with open(DIRETORIO+nomeArq, "wb") as fd:
+            recebido = 0
+            while recebido < tamArq:
+                data, source = udpSock.recvfrom(4096)
+                fd.write(data)
+                print("lidos: ", len(data))
+                recebido += len(data)
+            print(f"O arquivo {nomeArq} foi recebido com sucesso")
+    
+    else:
+        print("Erro: Arquivo desejado não existe ou não foi encotrado.")
+
+udpSock.close
