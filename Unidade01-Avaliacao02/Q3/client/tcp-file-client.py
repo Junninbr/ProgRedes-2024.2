@@ -19,17 +19,17 @@ while True:
         pedido = "1"
         print("Enviando pedido de listagem dos arquivos.\n")
         tcpSock.send(pedido.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
-        dataTam, source = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
         resposta = str(dataTam.decode('utf-8'))
         print(resposta)
         break
 
 
-    '''else:
+    else:
         print ("Enviando pedido a", (SERVER, PORT), "para", nomeArq) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
-        udpSock.sendto(nomeArq.encode('utf-8'), (SERVER, PORT)) # Enviará o pedido codificado em UTF-8.
+        tcpSock.sendto(nomeArq.encode('utf-8'), (SERVER, PORT)) # Enviará o pedido codificado em UTF-8.
 
-        dataTam, source = udpSock.recvfrom(2048) # Pacote contendo o tamanho do arquivo solicitado.
+        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
 
         try:
             tamArq = int(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
@@ -42,7 +42,7 @@ while True:
             with open(DIRETORIO+nomeArq, "wb") as fd:
                 recebido = 0 # varíavel para receber o tamanho do arquivo.
                 while recebido < tamArq:
-                    data, source = udpSock.recvfrom(4096) # Será recebido mais um bloco de bytes contendo o arquivo em si e será escrito até o loop ser encerrado.
+                    data, source = tcpSock.recvfrom(4096) # Será recebido mais um bloco de bytes contendo o arquivo em si e será escrito até o loop ser encerrado.
                     fd.write(data)
                     print("lidos: ", len(data), "Bytes") # Printa quantos bytes foram recebidos e lidos.
                     recebido += len(data)
@@ -51,5 +51,5 @@ while True:
         else:
             print("Erro: Arquivo desejado não existe ou não foi encotrado.") # Caso o valor recebido seja 0, dará o erro.
 
-        udpSock.close() # A conexão com o servidor é fechado e o loop é encerrado.
-        break'''
+        tcpSock.close() # A conexão com o servidor é fechado e o loop é encerrado.
+        break
