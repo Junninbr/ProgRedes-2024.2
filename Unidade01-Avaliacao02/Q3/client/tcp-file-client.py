@@ -42,7 +42,7 @@ while True:
             with open(DIRETORIO+nomeArq, "wb") as fd:
                 recebido = 0 # varíavel para receber o tamanho do arquivo.
                 while recebido < tamArq:
-                    data, source = tcpSock.recvfrom(4096) # Será recebido mais um bloco de bytes contendo o arquivo em si e será escrito até o loop ser encerrado.
+                    data = tcpSock.recv(4096) # Será recebido mais um bloco de bytes contendo o arquivo em si e será escrito até o loop ser encerrado.
                     fd.write(data)
                     print("lidos: ", len(data), "Bytes") # Printa quantos bytes foram recebidos e lidos.
                     recebido += len(data)
