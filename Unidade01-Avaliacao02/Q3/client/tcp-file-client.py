@@ -27,7 +27,7 @@ while True:
 
     else:
         print ("Enviando pedido a", (SERVER, PORT), "para", nomeArq) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
-        tcpSock.sendto(nomeArq.encode('utf-8'), (SERVER, PORT)) # Enviará o pedido codificado em UTF-8.
+        tcpSock.send(nomeArq.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
 
