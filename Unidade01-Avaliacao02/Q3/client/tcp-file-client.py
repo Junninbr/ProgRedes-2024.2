@@ -33,7 +33,7 @@ while True:
         resposta = str(dataTam.decode('utf-8'))
         
         
-        arquivo = input(f"{print(resposta)}")
+        arquivo = input(resposta)
         print ("Enviando pedido a", (SERVER, PORT), "para", arquivo) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
         tcpSock.send(arquivo.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
