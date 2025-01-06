@@ -46,19 +46,12 @@ while True:
          # Caso o cliente solicite o envio de apenas um arquivo (sget)
         elif filename == "2":
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
-            arq = client_socket.recv(2048).decode()
-            path = os.path.join(DIRETORIO, arq)
-        
-        # Caso o cliente solicite um arquivo específico
-        else:
-            arquivo = filename
+            arquivo = client_socket.recv(2048).decode()
             path = os.path.join(DIRETORIO, arquivo)
-
             if os.path.isfile(path):
                 tam = os.path.getsize(path)
                 print(f'Enviando o tamanho do arquivo {arquivo} ({tam} bytes) ao cliente {client_address}')
                 client_socket.sendall(str(tam).encode())
-
                 # Envia o arquivo em blocos de 2048 bytes
                 with open(path, 'rb') as file:
                     while chunk := file.read(2048):
