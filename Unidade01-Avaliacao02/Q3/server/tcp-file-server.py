@@ -1,5 +1,6 @@
 import socket
 import os
+import glob
 
 # Configuração do servidor
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,7 +21,6 @@ while True:
     print(f'Cliente conectado: {client_address}')
     
     while True:  # Mantém o loop ativo para múltiplas requisições do cliente
-        # Recebe o comando ou nome do arquivo requisitado
         filename= client_socket.recv(2048).decode()
         
         # Se o cliente desconectar, encerra o loop
@@ -45,6 +45,7 @@ while True:
         
          # Caso o cliente solicite o envio de apenas um arquivo (sget)
         elif filename == "2":
+            print(f'Recebida a solitação de apenas um arquivo do cliente {client_address}')
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
             arquivo = client_socket.recv(2048).decode()
             path = os.path.join(DIRETORIO, arquivo)
@@ -57,8 +58,30 @@ while True:
                     while chunk := file.read(2048):
                         client_socket.sendall(chunk)
                 print(f'Arquivo {arquivo} enviado com sucesso para {client_address}')
-            else:
-                print(f'O arquivo {arquivo} não foi encontrado no diretório {DIRETORIO}')
+
+        # Caso o cliente solicite mais de um arquivo que contenham máscara (mget)
+        elif filename == "3":
+            print(f'Recebida a solicitação de arquivos com máscara do cliente {client_address}')
+            client_socket.sendall(b"Envie a mascara de arquivos desejada (exemplo: *.jpg): ")
+            mask = client_socket.recv(2048).decode()
+            print(f"Recebida máscara de arquivos '{mask}' do cliente {client_address}")
+            
+            # Obtém a lista dos arquivos pertencentes a máscara 
+            try:
+                files = glob.glob(os.path.join(DIRETORIO, mask))
+                if files:
+                    client_socket.sendall(b'Arquivos encontrados. Iniciando envio...')
+                    for file_path in files:
+                        filename = os.path.basename(file_path)
+                        file_size = os.path.getsize(file_path)
+                        print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
+                        client_socket.sendall(f"{filename}:{file_size}".encode())
+            except FileNotFoundError:
+                print(f'A máscara digitada pelo cliente não está associada a nenhum dos arquivos do servidor! Portanto, não é possível enviar arquivos associados a mesma.')    
                 client_socket.sendall(b'0')
+
+        else:
+            print(f'O arquivo {arquivo} não foi encontrado no diretório {DIRETORIO}')
+            client_socket.sendall(b'0')
 
     client_socket.close()
