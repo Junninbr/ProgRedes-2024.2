@@ -21,14 +21,14 @@ while True:
     
     while True:  # Mantém o loop ativo para múltiplas requisições do cliente
         # Recebe o comando ou nome do arquivo requisitado
-        filename = client_socket.recv(2048).decode()
+        filename= client_socket.recv(2048).decode()
         
         # Se o cliente desconectar, encerra o loop
         if not filename:
             print(f'Cliente {client_address} desconectado.')
             break
 
-        # Caso o cliente solicite a listagem de arquivos
+        # Caso o cliente solicite a listagem de arquivos (list)
         if filename == "1":
             print(f'Recebida solicitação de listagem de arquivos do cliente {client_address}')
             list_arq = os.listdir(DIRETORIO)
@@ -42,6 +42,12 @@ while True:
                 client_socket.sendall("\n".join(listagem).encode())
             else:
                 client_socket.sendall(b'Nenhum arquivo encontrado no servidor.')
+        
+         # Caso o cliente solicite o envio de apenas um arquivo (mget)
+        elif filename == "2":
+            client_socket.sendall(b'Envie o nome do arquivo desejado: ')
+            arq = client_socket.recv(2048).decode()
+            path = os.path.join(DIRETORIO, arq)
         
         # Caso o cliente solicite um arquivo específico
         else:
