@@ -57,7 +57,7 @@ while True:
                 print(f"O arquivo '{arquivo}' foi recebido com sucesso")
         
         else:
-            print("Erro: Arquivo desejado não existe ou não foi encotrado.") # Caso o valor recebido seja 0, dará o erro.
+            print("Erro: Digite um comando correto. Ex: list, mget, sget, eget.")
 
         tcpSock.close() # A conexão com o servidor é fechado e o loop é encerrado.
         break
