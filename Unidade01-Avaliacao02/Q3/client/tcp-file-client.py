@@ -31,9 +31,9 @@ while True:
         tcpSock.send(pedido.encode('utf-8'))
         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
         resposta = str(dataTam.decode('utf-8'))
-        input = (f"{print(resposta)}")
         
-        arquivo = input("Digite o nome do arquivo solicitado: \n")
+        
+        arquivo = input(f"{print(resposta)}")
         print ("Enviando pedido a", (SERVER, PORT), "para", arquivo) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
         tcpSock.send(arquivo.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
