@@ -43,7 +43,7 @@ while True:
             else:
                 client_socket.sendall(b'Nenhum arquivo encontrado no servidor.')
         
-         # Caso o cliente solicite o envio de apenas um arquivo (mget)
+         # Caso o cliente solicite o envio de apenas um arquivo (sget)
         elif filename == "2":
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
             arq = client_socket.recv(2048).decode()
