@@ -2,6 +2,7 @@ import socket
 import os
 import glob
 import hashlib
+import time
 
 # Configuração do servidor
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -75,17 +76,18 @@ while True:
                 files = glob.glob(os.path.join(DIRETORIO, mask))
                 if files:
                     client_socket.sendall(b'Arquivos encontrados. Iniciando envio...')
-
                     for file_path in files:
                         filename = os.path.basename(file_path) # Nome do arquivo 
                         file_size = os.path.getsize(file_path) # Tamanho do arquivo
                         print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
-                        client_socket.sendall(f"{filename}:{file_size}".encode())
+                        client_socket.sendall(f"{filename}:{file_size}".encode()) 
                         # Envio do conteúdo do arquivo
                         with open (file_path, 'rb') as file: 
                             while chunk := file.read(2048):
                                 client_socket.sendall(chunk)
-                        print(f'Arquivos {filename} enviados com sucesso ao cliente {client_address} ')
+                        print(f'Arquivo {filename} enviado com sucesso ao cliente {client_address} ')
+
+                        time.sleep(0.5)
                     client_socket.sendall(b'Arquivos enviados com sucesso!')
             except FileNotFoundError:
                 print(f'A máscara digitada pelo cliente não está associada a nenhum dos arquivos do servidor! Portanto, não é possível enviar arquivos associados a mesma.')    
@@ -93,24 +95,29 @@ while True:
 
         # Caso o cliente solicite o hash SHA 1 de um arquivo (hash)
         elif filename == "4":
-            print (f'Recebida a solicitação do hash SHA 1 do cliente {client_address}')
-            client_socket.sendall(b'Envie o nome do arquivo e o posicionamento desejado (exemplo: barco.jpg:500): ')
-            hash= client_socket.recv(2048).decode()
-            if ":" in hash: # Separação do nome do arquivo e da posição enviada pelo cliente
-                name_arq, pos = hash.split(':')
-                pos= int(pos) # A posição será usada como limite para leitura do arquivo
+            try:
+                print (f'Recebida a solicitação do hash SHA 1 do cliente {client_address}')
+                client_socket.sendall(b'Envie o nome do arquivo e o posicionamento desejado (exemplo: barco.jpg:500): ')
+                hash= client_socket.recv(2048).decode()
+                if ":" in hash: # Separação do nome do arquivo e da posição enviada pelo cliente
+                    name_arq, pos = hash.split(':')
+                    pos= int(pos) # A posição será usada como limite para leitura do arquivo
 
-                path= os.path.join(DIRETORIO, name_arq)
-                if os.path.isfile(path):
+                    path= os.path.join(DIRETORIO, name_arq)
+                    if os.path.isfile(path):
                 # Cálculo do hash
-                    try: 
                         with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
                             limite = file.read(pos)
                             print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
                             sha1= hashlib.sha1(limite).hexdigest # Cálculo do hash SHA1
                             client_socket.sendall(f'O hash SHA1 até a posição {pos} é: {sha1}')
-                    except Exception as e:
-                        client_socket.sendall(f'ERRO! Falha no cálculo do hash: {str(e)}'.encode())
+            except Exception as e:
+                if not ":" in hash: 
+                    print(f'ERRO! O formato de escrita para o hash {hash} está incorreto!')
+            
+            except Exception as e:
+                client_socket.sendall(f'ERRO! Falha no cálculo do hash: {str(e)}'.encode())
+                   
 
         else: 
             print(f'O arquivo {arquivo} não foi encontrado no diretório {DIRETORIO}')
