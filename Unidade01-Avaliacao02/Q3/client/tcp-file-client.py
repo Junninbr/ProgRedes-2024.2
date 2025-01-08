@@ -95,7 +95,8 @@ while True:
             
             try:
                 dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
-                arquivo, tamArq = dadosArq.split(':')
+                arquivo, tamArq(str) = dadosArq.split(':')
+                tamArq = int(tamArq)
                 print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
             except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
                 continue
