@@ -82,25 +82,33 @@ while True:
         
         
         arquivo = input(resposta)
+
         if arquivo[0:2] != "*.":
             print("Erro de sintaxe, digite um nome válido. Ex.: *.jpg, *.xml.")
         else:
             print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
             tcpSock.send(arquivo.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
-            dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-            resposta = str(dataTam.decode('utf-8'))
 
-            dataTam = tcpSock.recv(2048)
+            while True:   
+                 
+                dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
             
-            try:
-                dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
-                arquivo, tamArq(str) = dadosArq.split(':')
-                tamArq = int(tamArq)
-                print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-            except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
-                continue
-            
-            pedir_arquivo(arquivo, tamArq)
-            dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-            resposta = str(dataTam.decode('utf-8'))
+                if dataTam == b'Encerrado':
+                    print(f'Todos os arquivos foram recebidos com sucesso!')
+                    break
+                try:
+                    dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                    arquivo, tamArq = dadosArq.split(':')
+                    tamArq = int(tamArq)
+                    print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                    sucesso = pedir_arquivo(arquivo, tamArq)
+                    print("Arquivos recebidos")
+                    if not sucesso:
+                        print("arquivos")
+                        break
+                except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
+                        print('ERRO! Falha ao processar os bytes do arquivo!')
+                        continue
+        
+           
