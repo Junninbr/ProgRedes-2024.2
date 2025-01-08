@@ -94,9 +94,9 @@ while True:
             dataTam = tcpSock.recv(2048)
             
             try:
-                tamArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
-                tamArq = tamArq.split()
-                print(f"O arquivo '{tamArq[0]}' possui o tamanho de {tamArq[1]} Bytes.")
+                dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                arquivo, tamArq = dadosArq.split(':')
+                print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
             except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
                 continue
             
