@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 
 SERVER = '127.0.0.1' 
 PORT = 1234 
@@ -89,26 +90,23 @@ while True:
             print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
             tcpSock.send(arquivo.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
+            dataTam = tcpSock.recv(2048)
+            resposta = str(dataTam.decode('utf-8'))
+
 
             while True:   
                  
                 dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                print('teste: ', dataTam)
             
                 if dataTam == b'Encerrado':
                     print(f'Todos os arquivos foram recebidos com sucesso!')
                     break
-                try:
+                else:
                     dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                    print(dadosArq)
                     arquivo, tamArq = dadosArq.split(':')
                     tamArq = int(tamArq)
                     print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                    sucesso = pedir_arquivo(arquivo, tamArq)
-                    print("Arquivos recebidos")
-                    if not sucesso:
-                        print("arquivos")
-                        break
-                except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
-                        print('ERRO! Falha ao processar os bytes do arquivo!')
-                        continue
-        
-           
+                    pedir_arquivo(arquivo, tamArq)
+                    time.sleep(0.5)
