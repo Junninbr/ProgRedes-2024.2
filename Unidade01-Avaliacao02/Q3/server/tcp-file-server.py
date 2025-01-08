@@ -80,7 +80,7 @@ while True:
                         filename = os.path.basename(file_path) # Nome do arquivo 
                         file_size = os.path.getsize(file_path) # Tamanho do arquivo
                         print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
-                        client_socket.sendall(f"{filename}:{file_size}".encode()) 
+                        client_socket.sendall(f"{filename}:{file_size}\0".encode()) 
                         # Envio do conteúdo do arquivo
                         with open (file_path, 'rb') as file: 
                             while chunk := file.read(2048):
