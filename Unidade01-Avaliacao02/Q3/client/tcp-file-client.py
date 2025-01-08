@@ -83,17 +83,23 @@ while True:
         
         arquivo = input(resposta)
         if arquivo[0:2] != "*.":
-            print("Erro de sinxtaxe, digite um nome válido. Ex.: *.jpg, *.xml.")
+            print("Erro de sintaxe, digite um nome válido. Ex.: *.jpg, *.xml.")
         else:
             print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo) # Caso seja pedido um arquivo, será printado o nome em si ao servidor conectado.
             tcpSock.send(arquivo.encode('utf-8')) # Enviará o pedido codificado em UTF-8.
 
             dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+            resposta = str(dataTam.decode('utf-8'))
+
+            dataTam = tcpSock.recv(2048)
             
             try:
-                tamArq = int(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
-                print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                tamArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                tamArq = tamArq.split()
+                print(f"O arquivo '{tamArq[0]}' possui o tamanho de {tamArq[1]} Bytes.")
             except ValueError: # Caso o valor recebido seja 0, dará essa exceção.
                 continue
             
             pedir_arquivo(arquivo, tamArq)
+            dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+            resposta = str(dataTam.decode('utf-8'))
