@@ -35,7 +35,9 @@ def pedir_arquivo(arquivo, tamArq):
 
 # Loop para iterar o pedido do arquivo. 
 while True:
-    nomeArq = input("Digite o comando desejado ou digite 0 para sair: ") # Input para receber o nome do arquivo.
+
+    print(f"Conectado ao Servidor: {SERVER}:{PORT}\n")
+    nomeArq = input("Digite o comando desejado: \n\n list: Lista os arquivos no servidor.\n sget <arquivo>: Faz o download de um único arquivo.\n mget <máscara>: Faz o download de múltiplos arquivos utilizando uma máscara.\n hash <arquivo>: Calcula o hash de um arquivo.\n 0: Encerra o programa.\n\nComando: ") # Input para receber o nome do arquivo.
     if nomeArq == "0": # Caso seja digitado 0, a conexão com o servidor é fechado e o loop é encerrado.
         tcpSock.close()
         print("Encerrando programa...")
