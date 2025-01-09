@@ -112,12 +112,16 @@ while True:
                     time.sleep(0.5)
 
     elif nomeArq== "hash":
-        pedido = 4
+        pedido = "4"
         print("Enviando pedido de Cálculo de Hash...\n")
         tcpSock.send(pedido.encode('utf-8'))
         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
         resposta = str(dataTam.decode('utf-8'))
         arquivo = input(resposta)
         tcpSock.send(arquivo.encode('utf-8'))
-        hashCalc = tcpSock.recv(2048)
+        hashCalc = tcpSock.recv(2048).decode('utf-8')
         print(hashCalc)
+        dataTam = tcpSock.recv(2048)
+        resposta2 = dataTam.decode('utf-8')
+        print(resposta2)
+        break
