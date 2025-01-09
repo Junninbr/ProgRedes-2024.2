@@ -103,10 +103,21 @@ while True:
                     print(f'Todos os arquivos foram recebidos com sucesso!')
                     break
                 else:
-                    dadosArq = str(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                    dadosArq = dataTam.decode('utf-8') # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
                     print(dadosArq)
                     arquivo, tamArq = dadosArq.split(':')
                     tamArq = int(tamArq)
                     print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
                     pedir_arquivo(arquivo, tamArq)
                     time.sleep(0.5)
+
+    elif nomeArq== "hash":
+        pedido = 4
+        print("Enviando pedido de Cálculo de Hash...\n")
+        tcpSock.send(pedido.encode('utf-8'))
+        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+        resposta = str(dataTam.decode('utf-8'))
+        arquivo = input(resposta)
+        tcpSock.send(arquivo.encode('utf-8'))
+        hashCalc = tcpSock.recv(2048)
+        print(hashCalc)
