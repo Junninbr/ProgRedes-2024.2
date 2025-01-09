@@ -33,8 +33,8 @@ while True:
             break
         elif filename == "0":
             print('Encerrando programa...')
-        # Caso o cliente solicite a listagem de arquivos (list)
-        if filename == "1":
+        # Caso o cliente solicite a listagem de arquivos (list) - Comando 1
+        if filename == "1":   
             print(f'Recebida solicitação de listagem de arquivos do cliente {client_address}')
             list_arq = os.listdir(DIRETORIO)
             listagem = []
@@ -48,7 +48,7 @@ while True:
             else:
                 client_socket.sendall(b'Nenhum arquivo encontrado no servidor.')
         
-        # Caso o cliente solicite o envio de apenas um arquivo (sget)
+        # Caso o cliente solicite o envio de apenas um arquivo (sget) - Comando 2
         elif filename == "2":
             print(f'Recebida a solitação de apenas um arquivo do cliente {client_address}')
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
@@ -64,7 +64,7 @@ while True:
                         client_socket.sendall(chunk)
                 print(f'Arquivo {arquivo} enviado com sucesso para {client_address}')
 
-        # Caso o cliente solicite mais de um arquivo que contenham máscara (mget)
+        # Caso o cliente solicite mais de um arquivo que contenham máscara (mget) - Comando 3
         elif filename == "3":
             print(f'Recebida a solicitação de arquivos com máscara do cliente {client_address}')
             client_socket.sendall(b"Envie a mascara de arquivos desejada (exemplo: *.jpg): ")
@@ -93,7 +93,7 @@ while True:
                 print(f'A máscara digitada pelo cliente não está associada a nenhum dos arquivos do servidor! Portanto, não é possível enviar arquivos associados a mesma.')    
                 client_socket.sendall(b'0')
 
-        # Caso o cliente solicite o hash SHA 1 de um arquivo (hash)
+        # Caso o cliente solicite o hash SHA 1 de um arquivo (hash) - Comando 4
         elif filename == "4":
             try:
                 print (f'Recebida a solicitação do hash SHA 1 do cliente {client_address}')
@@ -109,8 +109,10 @@ while True:
                         with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
                             limite = file.read(pos)
                             print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
-                            sha1= hashlib.sha1(limite).hexdigest # Cálculo do hash SHA1
-                            client_socket.sendall(f'O hash SHA1 até a posição {pos} é: {sha1}')
+                            calc= hashlib.sha1(limite).hexdigest() # Cálculo do hash SHA1
+                            sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : {calc}/n ')
+                            client_socket.sendall(sha1.encode('utf-8'))
+                            client_socket.sendall(b'Hash enviado com sucesso!')
             except Exception as e:
                 if not ":" in hash: 
                     print(f'ERRO! O formato de escrita para o hash {hash} está incorreto!')
