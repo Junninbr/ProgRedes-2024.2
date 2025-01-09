@@ -98,29 +98,26 @@ while True:
                 print (f'Recebida a solicitação do hash SHA 1 do cliente {client_address}')
                 client_socket.sendall(b'Envie o nome do arquivo e o posicionamento desejado (exemplo: barco.jpg:500): ')
                 hash= client_socket.recv(2048).decode()
-                try: 
-                    if ":" in hash: # Separação do nome do arquivo e da posição enviada pelo cliente
-                        name_arq, pos = hash.split(':')
-                        pos= int(pos) # A posição será usada como limite para leitura do arquivo
+                name_arq, pos = hash.split(':') # Separação do nome do arquivo e da posição enviada pelo cliente
+                pos= int(pos)
+                if not ":" in hash:
+                    erro = client_socket.sendall(f'ERRO! O formato de escrita para o hash {hash} está incorreto!'.encode())
+                    print(erro) 
 
-                        path= os.path.join(DIRETORIO, name_arq)
-                        if os.path.isfile(path):
+                elif name_arq not in DIRETORIO:
+                    erro = client_socket.sendall(f'ERRO! o arquivo {name_arq} não existe no diretório {DIRETORIO}'.encode())      
+                    print(erro)    
+
+                elif ":" in hash:
+                    path= os.path.join(DIRETORIO, name_arq)
+                    if os.path.isfile(path):
                     # Cálculo do hash
-                            with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
-                                limite = file.read(pos)
-                                print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
-                                calc= hashlib.sha1(limite).hexdigest() # Cálculo do hash SHA1
-                                sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
-                                client_socket.sendall(sha1.encode())
-                                client_socket.sendall(b'Hash enviado com sucesso!')
-                except Exception as e:
-                    if not ":" in hash: 
-                        client_socket.sendall(f'ERRO! O formato de escrita para o hash {hash} está incorreto!'.encode())
-            
-                except Exception as e:
-                    client_socket.sendall(f'ERRO! Falha no cálculo do hash: {str(e)}'.encode())
-            
-                except FileNotFoundError:
-                    client_socket.sendall(f'ERRO! o arquivo {name_arq} não existe no diretório {DIRETORIO}'.encode())           
-
+                        with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
+                            limite = file.read(pos)
+                            print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
+                            calc= hashlib.sha1(limite).hexdigest() # Cálculo do hash SHA1
+                            sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
+                            client_socket.sendall(sha1.encode())
+                            client_socket.sendall(b'Hash enviado com sucesso!')
+    
     client_socket.close()
