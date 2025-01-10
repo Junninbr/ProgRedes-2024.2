@@ -1,6 +1,7 @@
 import socket
 import os
 import time
+import hashlib
 
 SERVER = '127.0.0.1' 
 PORT = 1234 
@@ -117,13 +118,65 @@ while True:
         pedido = "4"
         print("Enviando pedido de Cálculo de Hash...\n")
         tcpSock.send(pedido.encode('utf-8'))
+
         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-        resposta = str(dataTam.decode('utf-8'))
+        resposta = dataTam.decode('utf-8')
+
         arquivo = input(resposta)
         tcpSock.send(arquivo.encode('utf-8'))
+
         hashCalc = tcpSock.recv(2048).decode('utf-8')
         print(hashCalc)
+        
         dataTam = tcpSock.recv(2048)
         resposta2 = dataTam.decode('utf-8')
         print(resposta2)
         break
+
+    elif nomeArq== "eget":
+        pedido = "5"
+        print("Enviando pedido de continuar o download de um arquivo...\n")
+        tcpSock.send(pedido.encode('utf-8'))
+
+        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+        resposta = dataTam.decode('utf-8')
+
+        arquivo = input(resposta)
+        if not ":" in arquivo:
+            tcpSock.send(arquivo.encode)
+            dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+            resposta = dataTam.decode('utf-8')
+            print(resposta)
+
+        else:
+            arquivo, hashPedido = arquivo.split(":")
+            if hashPedido == "hash":
+                print("Calculando hash do arquivo local...")
+                path= os.path.join(DIRETORIO, arquivo)
+                # Calculo do hash do arquivo na pasta files do CLIENTE
+                if os.path.isfile(path):
+                    with open (path, 'rb') as file:
+                        leitura = file.read()
+                        calc= hashlib.sha1(leitura).hexdigest()
+                        client_hash= calc
+                        tcpSock.send(arquivo.encode('utf-8'))
+                    dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                    resposta = dataTam.decode('utf-8')
+                    if resposta == "Os hashes do servidor e do cliente coincidem":
+                        print(resposta)
+                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                        resposta = dataTam.decode('utf-8')
+                        print(resposta)
+
+                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                        print(f"Salvando o arquivo '{arquivo}' localmente...")
+                        with open(DIRETORIO + arquivo, "ab") as fd:
+                            recebido = 0
+                            while recebido < dataTam:
+                                data = tcpSock.recv(4096)  # Recebe dados em blocos
+                                fd.write(data)
+                                print("Lidos: ", len(data), "Bytes")  # Informa o número de bytes lidos
+                                recebido += len(data)
+                            print(f"O restante do arquivo '{arquivo}' foi recebido com sucesso.")
+                    else:
+                        print(resposta)
