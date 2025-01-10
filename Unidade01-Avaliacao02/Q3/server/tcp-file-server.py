@@ -119,7 +119,7 @@ while True:
                             sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
                             client_socket.sendall(sha1.encode())
                             client_socket.sendall(b'Hash enviado com sucesso!')
-        # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido
+        # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido - Comando 5
         elif filename == "5":
                 print(f'Recibida a solicitação de continuar o download do arquivo do cliente {client_address} ') 
                 client_socket.sendall(b'Envie o nome do arquivo e o hash da parte baixada (exemplo: barco.jpg:hash): ')
