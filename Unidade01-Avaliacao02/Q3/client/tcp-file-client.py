@@ -153,6 +153,7 @@ while True:
             if hashPedido == "hash":
                 print("Calculando hash do arquivo local...")
                 path= os.path.join(DIRETORIO, arquivo)
+                arqLocal = os.path.getsize(path)
                 # Calculo do hash do arquivo na pasta files do CLIENTE
                 if os.path.isfile(path):
                     with open (path, 'rb') as file:
@@ -173,11 +174,13 @@ while True:
                         resposta = dataTam.decode('utf-8')
                         print(resposta)
 
+                        tcpSock.sendall(arqLocal)
+
                         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                         tamArq = int(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
                         if tamArq > 0:  # Se o tamanho do arquivo for maior que 0, criaremos e salvaremos o arquivo
                             
-                            with open(DIRETORIO + arquivo, "wb") as fd:
+                            with open(DIRETORIO + arquivo, "ab") as fd:
                                 recebido = 0
                                 while recebido < tamArq:
                                     data = tcpSock.recv(4096)  # Recebe dados em blocos
@@ -185,7 +188,7 @@ while True:
                                     print("Lidos: ", len(data), "Bytes")  # Informa o número de bytes lidos
                                     recebido += len(data)
                                     print(f"O arquivo '{arquivo}' foi recebido com sucesso.")
-                                    
+
                     else:
                         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                         resposta = dataTam.decode('utf-8')
