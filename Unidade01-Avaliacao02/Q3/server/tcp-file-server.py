@@ -18,6 +18,12 @@ server.listen(5)  # Configura o servidor para aceitar conexões
 
 print(f'Servidor escutando em.... {ip}:{porta}')
 
+# Função de segurança para verificar se o arquivo está dentro do diretório 
+
+def in_directory(base_directory, file_path):
+    real_path = os.path.realpath(file_path) # Elimina qualquer arquivo com caminho contendo '..'
+    return real_path.startswitch(base_directory) # Verifica se o caminho real do arquivo está dentro do diretório base
+
 
 while True:
     # Aguarda conexão de um cliente
@@ -33,6 +39,8 @@ while True:
             break
         elif filename == "0":
             print('Encerrando programa...')
+
+        
         # Caso o cliente solicite a listagem de arquivos (list) - Comando 1
         if filename == "1":   
             print(f'Recebida solicitação de listagem de arquivos do cliente {client_address}')
@@ -53,6 +61,7 @@ while True:
             print(f'Recebida a solitação de apenas um arquivo do cliente {client_address}')
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
             arquivo = client_socket.recv(2048).decode()
+
             path = os.path.join(DIRETORIO, arquivo)
             if os.path.isfile(path):
                 tam = os.path.getsize(path)
@@ -119,48 +128,49 @@ while True:
                             sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
                             client_socket.sendall(sha1.encode())
                             client_socket.sendall(b'Hash enviado com sucesso!')
-        # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido - Comando 5
+
+        # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido
         elif filename == "5":
-                print(f'Recibida a solicitação de continuar o download do arquivo do cliente {client_address} ') 
+                print(f'Recebida a solicitação de continuar o download do arquivo do cliente {client_address} ') 
                 client_socket.sendall(b'Envie o nome do arquivo e o hash da parte baixada (exemplo: barco.jpg:hash): ')
                 novo_hash= client_socket.recv(2048).decode()
+                print(novo_hash)
                 name_arq, hash= novo_hash.split(':') # Separação do nome do arquivo e do hash enviado pelo cliente
+                path= os.path.join(DIRETORIO, name_arq)
                 if not ":" in novo_hash:
-                    erro = client_socket.sendall(f'ERRO! O formato de escrita para o hash {novo_hash} está incorreto!'.encode())
+                    erro = client_socket.sendall(f'ERRO! O formato de escrita para o hash {hash} está incorreto!'.encode())
                     print(erro) 
-
-                elif name_arq not in DIRETORIO:
-                    erro = client_socket.sendall(f'ERRO! o arquivo {name_arq} não existe no diretório {DIRETORIO}'.encode())      
-                    print(erro)    
+  
                 
                 elif ':' in novo_hash:
                     path= os.path.join(DIRETORIO, name_arq)
                     # Calculo do hash do arquivo na pasta files do SERVIDOR
                     if os.path.isfile(path):
                         with open (path, 'rb') as file:
-                            leitura = file.read()
+                            leitura = file.read() # bytes completos do arquivo no servidor
                             calc= hashlib.sha1(leitura).hexdigest()
                             server_hash= calc
                     # Comparando cada hash
-                    print(f'Hash do cliente: {novo_hash}')
+                    print(f'Hash do cliente: {hash}')
                     print(f'Hash do servidor: {server_hash}')
             
                     # Verificando os hashes. o arquivo é enviado quando ambos os hashes forem iguais
 
-                    if novo_hash == server_hash:
-                        client_socket.sendall(b'Os hashes do servidor e do cliente coincidem')
-                        client_socket.sendall(b'Enviando o restante do arquivo....')
-
-                        # Envio do restante do arquivo até a interrupção do cliente
-                        resto = leitura[len(novo_hash):] # Seleciona os bytes do arquivo que o cliente ainda não recebeu
+                    if hash != server_hash:
+                        client_socket.sendall(b'Os hashes do servidor e do cliente se distinguem um do outro')
+                        client_socket.sendall(f'Envie agora o tamanho atual do arquivo {name_arq} na pasta files: ')
+                        tam = int(client_socket.recv(2048).decode('utf-8'))
+                        resto = leitura[tam:] # seleciona os bytes do arquivo não recebidos pelo cliente
+                        client_socket.sendall('O tamanho do arquivo completo no servidor é de: '.encode('utf-8'))
+                        client_socket.sendall(str(leitura).encode())
                         while resto: 
                            chunk = resto[:2048] # Pega o primeiro bloco de 2048 bytes do restante do arquivo 
                            client_socket.sendall(chunk)
                            resto = resto [:2048] # Os próximos 2048 bytes
                         client_socket.sendall(f'Restante do arquivo {name_arq} enviado com sucesso!'.encode('utf-8'))
 
-                    elif novo_hash != server_hash: 
-                        client_socket.sendall(f'ERRO! Os Hashes do servidor e do cliente do arquivo {name_arq} não são compatives!'.encode('utf-8'))
+                    elif hash == server_hash: 
+                        client_socket.sendall(f'ERRO! Os Hashes do servidor e do cliente do arquivo {name_arq} são compatives! Assim, os arquivos tem o mesmo tamanho em suas pastas!'.encode('utf-8'))
                     else: 
                         client_socket.sendall(f'ERRO! Falha no cálculo dos hashes do arquivo {name_arq}'.encode('utf-8'))
 
