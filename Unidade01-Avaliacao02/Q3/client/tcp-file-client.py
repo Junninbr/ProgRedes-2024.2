@@ -159,24 +159,35 @@ while True:
                         leitura = file.read()
                         calc= hashlib.sha1(leitura).hexdigest()
                         client_hash= calc
-                        tcpSock.send(arquivo.encode('utf-8'))
+                        tcpSock.send(f"{arquivo}:{client_hash}".encode())
                     dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                     resposta = dataTam.decode('utf-8')
-                    if resposta == "Os hashes do servidor e do cliente coincidem":
+
+                    if resposta == "Os hashes do servidor e do cliente se distinguem um do outro\n":
                         print(resposta)
                         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                         resposta = dataTam.decode('utf-8')
                         print(resposta)
 
                         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-                        print(f"Salvando o arquivo '{arquivo}' localmente...")
-                        with open(DIRETORIO + arquivo, "ab") as fd:
-                            recebido = 0
-                            while recebido < dataTam:
-                                data = tcpSock.recv(4096)  # Recebe dados em blocos
-                                fd.write(data)
-                                print("Lidos: ", len(data), "Bytes")  # Informa o número de bytes lidos
-                                recebido += len(data)
-                            print(f"O restante do arquivo '{arquivo}' foi recebido com sucesso.")
-                    else:
+                        resposta = dataTam.decode('utf-8')
                         print(resposta)
+
+                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                        tamArq = int(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
+                        if tamArq > 0:  # Se o tamanho do arquivo for maior que 0, criaremos e salvaremos o arquivo
+                            
+                            with open(DIRETORIO + arquivo, "wb") as fd:
+                                recebido = 0
+                                while recebido < tamArq:
+                                    data = tcpSock.recv(4096)  # Recebe dados em blocos
+                                    fd.write(data)
+                                    print("Lidos: ", len(data), "Bytes")  # Informa o número de bytes lidos
+                                    recebido += len(data)
+                                    print(f"O arquivo '{arquivo}' foi recebido com sucesso.")
+                                    
+                    else:
+                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
+                        resposta = dataTam.decode('utf-8')
+                        print(resposta)
+            
