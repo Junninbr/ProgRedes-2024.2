@@ -129,12 +129,9 @@ while True:
                     if os.path.isfile(path):
                     # Cálculo do hash
                         with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
-                            limite = file.read(pos)
-                            print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
+                            client_socket.sendall(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}').encode())   
                             calc = calcular_hash(path)
-                            sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
-                            client_socket.sendall(sha1.encode())
-                            client_socket.sendall(b'Hash enviado com sucesso!')
+                            client_socket.sendall(f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ').encode())
 
         # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido
         elif filename == "5":
