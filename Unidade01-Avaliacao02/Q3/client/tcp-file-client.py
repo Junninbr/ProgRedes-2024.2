@@ -10,6 +10,8 @@ DIRETORIO = "files/"
 tcpSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcpSock.connect((SERVER, PORT))
 
+global leitura
+
 def pedir_arquivo(arquivo, tamArq):
     if os.path.exists(DIRETORIO + arquivo):  # Verifica se o arquivo já existe
         resp = input(f"O arquivo '{arquivo}' já existe, deseja sobrescrever? S ou N: ")
@@ -153,7 +155,6 @@ while True:
             if hashPedido == "hash":
                 print("Calculando hash do arquivo local...")
                 path= os.path.join(DIRETORIO, arquivo)
-                arqLocal = os.path.getsize(path)
                 # Calculo do hash do arquivo na pasta files do CLIENTE
                 if os.path.isfile(path):
                     with open (path, 'rb') as file:
@@ -161,20 +162,18 @@ while True:
                         calc= hashlib.sha1(leitura).hexdigest()
                         client_hash= calc
                         tcpSock.send(f"{arquivo}:{client_hash}".encode())
+                        
                     dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                     resposta = dataTam.decode('utf-8')
 
-                    if resposta == "Os hashes do servidor e do cliente se distinguem um do outro\n":
+                    if resposta == "Os hashes dos arquivos são diferentes, logo o arquivo na pasta files do cliente está incompleto\n":
                         print(resposta)
-                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-                        resposta = dataTam.decode('utf-8')
-                        print(resposta)
-
-                        dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
-                        resposta = dataTam.decode('utf-8')
-                        print(resposta)
-
-                        tcpSock.sendall(arqLocal)
+            
+                        with open (path, 'rb') as file:
+                            leitura = file.read()
+                            arqLocal = len(leitura)
+                            print(arqLocal)
+                            tcpSock.send(f"{int(arqLocal)}".encode())
 
                         dataTam = tcpSock.recv(2048) # Pacote contendo o tamanho do arquivo solicitado.
                         tamArq = int(dataTam.decode('utf-8')) # Transforma o pacote contendo o tamanho em inteiro e printa o nome e tamanho.
@@ -183,7 +182,7 @@ while True:
                             with open(DIRETORIO + arquivo, "ab") as fd:
                                 recebido = 0
                                 while recebido < tamArq:
-                                    data = tcpSock.recv(4096)  # Recebe dados em blocos
+                                    data = tcpSock.recv(2048)  # Recebe dados em blocos
                                     fd.write(data)
                                     print("Lidos: ", len(data), "Bytes")  # Informa o número de bytes lidos
                                     recebido += len(data)
