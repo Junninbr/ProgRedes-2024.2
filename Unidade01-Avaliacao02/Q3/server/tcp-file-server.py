@@ -74,7 +74,7 @@ while True:
             arquivo = client_socket.recv(4096).decode()
 
             path = os.path.join(DIRETORIO, arquivo)
-            if os.path.isfile(path) and in_directory(DIRETORIO, file_path):
+            if os.path.isfile(path):
                 tam = os.path.getsize(path)
                 print(f'Enviando o tamanho do arquivo {arquivo} ({tam} bytes) ao cliente {client_address}')
                 client_socket.sendall(str(tam).encode())
@@ -84,6 +84,8 @@ while True:
                         client_socket.sendall(chunk)
                 print(f'Arquivo {arquivo} enviado com sucesso para {client_address}')
 
+            elif '..' in filename: 
+                in_directory(DIRETORIO, file_path)
         # Caso o cliente solicite mais de um arquivo que contenham máscara (mget) - Comando 3
         elif filename == "3":
             print(f'Recebida a solicitação de arquivos com máscara do cliente {client_address}')
@@ -131,12 +133,15 @@ while True:
 
                 elif ":" in hash:
                     path= os.path.join(DIRETORIO, name_arq)
-                    if os.path.isfile(path) and in_directory(DIRETORIO, file_path):
+                    if os.path.isfile(path):
                     # Cálculo do hash
                         with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
                             client_socket.sendall(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}').encode()
                             calc = calcular_hash(path)
                             client_socket.sendall(f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ').encode()
+
+                    elif '..' in filename: 
+                        in_directory(DIRETORIO, file_path)
 
         # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido
         elif filename == "5":
@@ -148,7 +153,7 @@ while True:
                 print(name_arq, hash_cliente)
                 path = os.path.join(DIRETORIO, name_arq)
 
-                if os.path.isfile(path) and in_directory(DIRETORIO, file_path):
+                if os.path.isfile(path):
                     hash_servidor = calcular_hash(path) 
                     print(hash_servidor)
 
@@ -169,7 +174,8 @@ while True:
                                 client_socket.sendall(chunk)
                             client_socket.sendall(f'Envio do restante do arquivo concluído.'.encode('utf-8'))
 
-
+                elif '..' in filename: 
+                    in_directory(DIRETORIO, file_path)
 
                                 
 
