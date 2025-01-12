@@ -23,10 +23,9 @@ print(f'Servidor escutando em.... {ip}:{porta}')
 def in_directory(base_directory, file_path):
     real_path = os.path.realpath(file_path) # Elimina qualquer arquivo com caminho contendo '..'
     if '..' in real_path.split(os.sep):
-          if '..' in real_path.split(os.sep):
             client_socket(f"ERRO! O arquivo {file_path} contém '..', o que é proibido por questões de segurança.".encode('utf-8'))
             return False
-        return real_path.startswitch(base_directory) # Verifica se o caminho real do arquivo está dentro do diretório base
+    return real_path.startswitch(base_directory) # Verifica se o caminho real do arquivo está dentro do diretório base
 
 # Função para cálcular o hash, apresentada nos comandos hash e eget
 def calcular_hash(file_path, tamanho=None):
