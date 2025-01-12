@@ -67,7 +67,7 @@ while True:
         elif filename == "2":
             print(f'Recebida a solitação de apenas um arquivo do cliente {client_address}')
             client_socket.sendall(b'Envie o nome do arquivo desejado: ')
-            arquivo = client_socket.recv(2048).decode()
+            arquivo = client_socket.recv(4096).decode()
 
             path = os.path.join(DIRETORIO, arquivo)
             if os.path.isfile(path):
@@ -76,7 +76,7 @@ while True:
                 client_socket.sendall(str(tam).encode())
                 # Envia o arquivo em blocos de 2048 bytes
                 with open(path, 'rb') as file:
-                    while chunk := file.read(2048):
+                    while chunk := file.read(4096):
                         client_socket.sendall(chunk)
                 print(f'Arquivo {arquivo} enviado com sucesso para {client_address}')
 
@@ -84,7 +84,7 @@ while True:
         elif filename == "3":
             print(f'Recebida a solicitação de arquivos com máscara do cliente {client_address}')
             client_socket.sendall(b"Envie a mascara de arquivos desejada (exemplo: *.jpg): ")
-            mask = client_socket.recv(2048).decode()
+            mask = client_socket.recv(4096).decode()
             print(f"Recebida máscara de arquivos '{mask}' do cliente {client_address}")
             
             # Obtém a lista dos arquivos pertencentes a máscara 
@@ -99,7 +99,7 @@ while True:
                         client_socket.sendall(f"{filename}:{file_size}\0".encode()) 
                         # Envio do conteúdo do arquivo
                         with open (file_path, 'rb') as file: 
-                            while chunk := file.read(2048):
+                            while chunk := file.read(4096):
                                 client_socket.sendall(chunk)
                         print(f'Arquivo {filename} enviado com sucesso ao cliente {client_address} ')
 
@@ -113,7 +113,7 @@ while True:
         elif filename == "4":
                 print (f'Recebida a solicitação do hash SHA 1 do cliente {client_address}')
                 client_socket.sendall(b'Envie o nome do arquivo e o posicionamento desejado (exemplo: barco.jpg:500): ')
-                hash= client_socket.recv(2048).decode()
+                hash= client_socket.recv(4096).decode()
                 name_arq, pos = hash.split(':') # Separação do nome do arquivo e da posição enviada pelo cliente
                 pos= int(pos)
                 if not ":" in hash:
@@ -137,29 +137,36 @@ while True:
         elif filename == "5":
                 print(f"Solicitação para continuar download do cliente {client_address}")
                 client_socket.sendall(b'Envie o nome do arquivo e o hash da parte baixada (exemplo: barco.jpg:hash): ')
-                novo_hash = client_socket.recv(2048).decode()
+                novo_hash = client_socket.recv(4096).decode()
+                print(novo_hash)
                 name_arq, hash_cliente = novo_hash.split(':') # Separa nome e o hash para serem tratados separadamente
+                print(name_arq, hash_cliente)
                 path = os.path.join(DIRETORIO, name_arq)
 
                 if os.path.isfile(path):
                     hash_servidor = calcular_hash(path) 
+                    print(hash_servidor)
 
-                if hash_cliente == hash_servidor:
-                    client_socket.sendall(f'Os hashes dos arquivos são iguais, logo o arquivo na pasta files do cliente está completo'.encode())
-                else:
-                    client_socket.sendall(f'Os hashes dos arquivos são diferentes, logo o arquivo na pasta files do cliente está incompleto'.encode())
-                    tam_atual = int(client_socket.recv(2048).decode()) # Tamanho dos bytes do arquivo incompleto em files do cliente
+                    if hash_cliente == hash_servidor:
+                        client_socket.sendall(f'Os hashes dos arquivos são iguais, logo o arquivo na pasta files do cliente está completo'.encode('utf-8'))
+                    else:
+                        client_socket.sendall(f'Os hashes dos arquivos são diferentes, logo o arquivo na pasta files do cliente está incompleto'.encode('utf-8'))
+                        tam_atual = int(client_socket.recv(4096).decode()) # Tamanho dos bytes do arquivo incompleto em files do cliente
+                        print(tam_atual)
 
-                    with open(path, 'rb') as file: # Seleciona o último byte onde o cliente interrompeu o download e armazena na variável resto
-                        file.seek(tam_atual)  
-                        resto = file.read() 
-        
-                        client_socket.sendall(f'Enviando {len(resto)} bytes restantes...'.encode()) # Envia o tamanho dos bytes que faltam para completar o arquivo
-                        for i in range(0, len(resto), 2048): # Completando os bytes do arquivo interrompido para formar o arquivo completo
-                            chunk = resto[i:i+2048]
-                            client_socket.sendall(chunk)
+                        with open(path, 'rb') as file: # Seleciona o último byte onde o cliente interrompeu o download e armazena na variável resto
+                            file.seek(tam_atual)  
+                            resto = file.read() 
+                            tam_arq= len(resto) # tam_arq armazena o tamanho dos bytes que faltam para completar o arquivo
+                            client_socket.sendall(f'{int(tam_arq)}'.encode('utf-8')) # Envia o tamanho dos bytes que faltam para completar o arquivo
+                            for i in range(0,tam_arq, 4096): # Completando os bytes do arquivo interrompido para formar o arquivo completo
+                                chunk = resto[i:i+4096]
+                                client_socket.sendall(chunk)
+                            client_socket.sendall(f'Envio do restante do arquivo concluído.'.encode('utf-8'))
 
-        client_socket.sendall(f'Envio do restante do arquivo concluído.'.encode())
+
+
+                                
 
 
 
