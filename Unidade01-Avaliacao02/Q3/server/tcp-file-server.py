@@ -58,7 +58,7 @@ while True:
             listagem = []
             for file in list_arq:
                 file_path = os.path.join(DIRETORIO, file)
-                if os.path.isfile(file_path) and in_directory(DIRETORIO, file_path):
+                if os.path.isfile(file_path):
                     file_size = os.path.getsize(file_path)
                     listagem.append(f"{file} ({file_size} bytes)")
             if listagem:
