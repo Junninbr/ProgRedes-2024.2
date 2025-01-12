@@ -154,7 +154,7 @@ while True:
                         file.seek(tam_atual)  
                         resto = file.read() 
         
-                        client_socket.sendall(f'Enviando {len(resto)} bytes restantes...'.encode()) 
+                        client_socket.sendall(f'Enviando {len(resto)} bytes restantes...'.encode()) # Envia o tamanho dos bytes que faltam para completar o arquivo
                         for i in range(0, len(resto), 2048): # Completando os bytes do arquivo interrompido para formar o arquivo completo
                             chunk = resto[i:i+2048]
                             client_socket.sendall(chunk)
