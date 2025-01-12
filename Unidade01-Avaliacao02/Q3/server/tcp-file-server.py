@@ -24,6 +24,13 @@ def in_directory(base_directory, file_path):
     real_path = os.path.realpath(file_path) # Elimina qualquer arquivo com caminho contendo '..'
     return real_path.startswitch(base_directory) # Verifica se o caminho real do arquivo está dentro do diretório base
 
+# Função para cálcular o hash, apresentada nos comandos hash e eget
+def calcular_hash(file_path, tamanho=None):
+    with open(file_path, 'rb') as f:
+        if tamanho:
+            return hashlib.sha1(f.read(tamanho)).hexdigest()
+        return hashlib.sha1(f.read()).hexdigest()
+
 
 while True:
     # Aguarda conexão de um cliente
@@ -122,57 +129,38 @@ while True:
                     if os.path.isfile(path):
                     # Cálculo do hash
                         with open (path, 'rb') as file:  # Lendo o arquivo em bytes até a posição solicitada pelo cliente
-                            limite = file.read(pos)
-                            print(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}')   
-                            calc= hashlib.sha1(limite).hexdigest() # Cálculo do hash SHA1
-                            sha1 = (f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ')
-                            client_socket.sendall(sha1.encode())
-                            client_socket.sendall(b'Hash enviado com sucesso!')
+                            client_socket.sendall(f'Obtendo o hash SHA1 do arquivo {name_arq} até a posição {pos}').encode()
+                            calc = calcular_hash(path)
+                            client_socket.sendall(f'O hash SHA1 obtido do arquivo {name_arq} até a posição {pos} corresponde a : \n{calc} ').encode()
 
         # Caso o cliente desejar continuar o download de um arquivo do servidor a partir de onde foi interrompido
         elif filename == "5":
-                print(f'Recebida a solicitação de continuar o download do arquivo do cliente {client_address} ') 
+                print(f"Solicitação para continuar download do cliente {client_address}")
                 client_socket.sendall(b'Envie o nome do arquivo e o hash da parte baixada (exemplo: barco.jpg:hash): ')
-                novo_hash= client_socket.recv(2048).decode()
-                print(novo_hash)
-                name_arq, hash= novo_hash.split(':') # Separação do nome do arquivo e do hash enviado pelo cliente
-                path= os.path.join(DIRETORIO, name_arq)
-                if not ":" in novo_hash:
-                    erro = client_socket.sendall(f'ERRO! O formato de escrita para o hash {hash} está incorreto!'.encode())
-                    print(erro) 
-  
+                novo_hash = client_socket.recv(2048).decode()
+                name_arq, hash_cliente = novo_hash.split(':')
+                path = os.path.join(DIRETORIO, name_arq)
+
+                if os.path.isfile(path):
                 
-                elif ':' in novo_hash:
-                    path= os.path.join(DIRETORIO, name_arq)
-                    # Calculo do hash do arquivo na pasta files do SERVIDOR
-                    if os.path.isfile(path):
-                        with open (path, 'rb') as file:
-                            leitura = file.read() # bytes completos do arquivo no servidor
-                            calc= hashlib.sha1(leitura).hexdigest()
-                            server_hash= calc
-                    # Comparando cada hash
-                    print(f'Hash do cliente: {hash}')
-                    print(f'Hash do servidor: {server_hash}')
-            
-                    # Verificando os hashes. o arquivo é enviado quando ambos os hashes forem iguais
+                    hash_servidor = calcular_hash(path)
 
-                    if hash != server_hash:
-                        client_socket.sendall(b'Os hashes do servidor e do cliente se distinguem um do outro')
-                        client_socket.sendall(f'Envie agora o tamanho atual do arquivo {name_arq} na pasta files: ')
-                        tam = int(client_socket.recv(2048).decode('utf-8'))
-                        resto = leitura[tam:] # seleciona os bytes do arquivo não recebidos pelo cliente
-                        client_socket.sendall('O tamanho do arquivo completo no servidor é de: '.encode('utf-8'))
-                        client_socket.sendall(str(leitura).encode())
-                        while resto: 
-                           chunk = resto[:2048] # Pega o primeiro bloco de 2048 bytes do restante do arquivo 
-                           client_socket.sendall(chunk)
-                           resto = resto [:2048] # Os próximos 2048 bytes
-                        client_socket.sendall(f'Restante do arquivo {name_arq} enviado com sucesso!'.encode('utf-8'))
+                if hash_cliente == hash_servidor:
+                    client_socket.sendall(f'Os hashes dos arquivos são iguais, logo o arquivo na pasta files do cliente está completo'.encode())
+                else:
+                    client_socket.sendall(f'Os hashes dos arquivos são diferentes, logo o arquivo na pasta files do cliente está incompleto'.encode())
+                    tam_atual = int(client_socket.recv(2048).decode())
 
-                    elif hash == server_hash: 
-                        client_socket.sendall(f'ERRO! Os Hashes do servidor e do cliente do arquivo {name_arq} são compatives! Assim, os arquivos tem o mesmo tamanho em suas pastas!'.encode('utf-8'))
-                    else: 
-                        client_socket.sendall(f'ERRO! Falha no cálculo dos hashes do arquivo {name_arq}'.encode('utf-8'))
+                    with open(path, 'rb') as file:
+                        file.seek(tam_atual)  # Avança até o ponto interrompido
+                        resto = file.read()
+        
+                        client_socket.sendall(f'Enviando {len(resto)} bytes restantes...'.encode())
+                        for i in range(0, len(resto), 2048):
+                            chunk = resto[i:i+2048]
+                            client_socket.sendall(chunk)
+
+        client_socket.sendall(f'Envio do restante do arquivo concluído.'.encode())
 
 
 
