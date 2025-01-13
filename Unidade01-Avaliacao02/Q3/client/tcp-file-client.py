@@ -103,6 +103,7 @@ while True:
                 while laco:
                     if not arquivo.startswith("*.") or "." not in arquivo:
                         print("Erro de sintaxe, digite um nome válido. Ex.: *.jpg, *.xml.")
+                        laco = False
 
                     elif arquivo[0:2] == "..":
                         print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo)
@@ -120,8 +121,8 @@ while True:
                         dataTam = tcpSock.recv(2048)
                         resposta = str(dataTam.decode('utf-8'))
 
-
-                        while True:   
+                        laco = True
+                        while laco:   
                             
                             dataTam = tcpSock.recv(2048)
                             print('teste: ', dataTam)
@@ -132,11 +133,21 @@ while True:
                             else:
                                 dadosArq = dataTam.decode('utf-8')
                                 print(dadosArq)
-                                arquivo, tamArq = dadosArq.split(':')
-                                tamArq = int(tamArq)
-                                print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                                pedir_arquivo(arquivo, tamArq)
-                                time.sleep(0.5)
+                                arquivo, tamArq, bytesArq = dadosArq.split(':')
+
+                                if bytesArq == " ":
+                                    tamArq = int(tamArq)
+                                    print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                                    pedir_arquivo(arquivo, tamArq)
+                                    laco = False
+                                    time.sleep(0.5)
+                                else:
+                                    tamArq = int(tamArq)
+                                    print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                                    pedir_arquivo(arquivo, tamArq)
+                                    laco = False
+                                    time.sleep(0.5)
+
 
             elif nomeArq== "hash":
                 pedido = "4"
