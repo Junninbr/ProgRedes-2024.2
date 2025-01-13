@@ -95,85 +95,54 @@ while True:
                 pedido = "3"
                 print("Enviando pedido de download de múltiplos arquivos por máscara ao servidor...\n")
                 tcpSock.send(pedido.encode('utf-8'))
-                dataTam = tcpSock.recv(2048)
-                resposta = (dataTam.decode('utf-8'))
-                
-                arquivo = input(resposta)
-                laco = True
-                while laco:
-                    if not arquivo.startswith("*.") or "." not in arquivo:
-                        print("Erro de sintaxe, digite um nome válido. Ex.: *.jpg, *.xml.")
-                        laco = False
+                resposta = tcpSock.recv(4096).decode('utf-8')
+    
+                print(resposta)
+                arquivo_mask = input("Digite a máscara de arquivos desejada (ex.: *.jpg): ")
+                tcpSock.send(arquivo_mask.encode('utf-8'))
+    
+                qtd_arquivos = int(tcpSock.recv(4096).decode('utf-8'))
+                if qtd_arquivos == 0:
+                    print("Nenhum arquivo encontrado com a máscara fornecida.")
+                   
+    
+                print(f"{qtd_arquivos} arquivos encontrados. Recebendo...")
+                # Verifique se o formato dos metadados é válido
+                while True:
+                    # Receber metadados do arquivo
+                    metadados = tcpSock.recv(4096).decode('utf-8').strip()
+                    
+                    if metadados == 'Encerrado':
+                            print("Todos os arquivos foram recebidos com sucesso!")
+                            break
+        
+                    elif ':' not in metadados:
+                        print(f"Erro nos metadados recebidos: {metadados}")
+                        continue  
 
-                    elif arquivo[0:2] == "..":
-                        print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo)
-                        tcpSock.send(arquivo.encode('utf-8'))
+                     
+                    nome_arquivo, tamanho_arquivo = metadados.split(':')
+                    tamanho_arquivo = int(tamanho_arquivo)
+                    print(f"Recebendo arquivo '{nome_arquivo}' ({tamanho_arquivo} bytes)")
+                    caminho_arquivo = os.path.join( DIRETORIO, nome_arquivo)
 
-                        dataTam = tcpSock.recv(2048)
-                        resposta = (dataTam.decode('utf-8'))
-                        print(resposta)
-                        laco = False
-                        
-                    else:
-                        print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo)
-                        tcpSock.send(arquivo.encode('utf-8'))
-                        dataTam = tcpSock.recv(2048)
-                        qtd_arquivos = str(dataTam.decode())
-                        
-                        for quantidade in qtd_arquivos:
-                            dataTam = tcpSock.recv(2048)
-                            resposta = str(dataTam.decode('utf-8'))
-
-                            laco = True
-                            while laco:   
-
-                                
-                                dataTam = tcpSock.recv(2048)
-                                print('teste: ', dataTam)
-                            
-                                if dataTam == b'Encerrado':
-                                    print(f'Todos os arquivos foram recebidos com sucesso!')
-                                    break
-                                else:
-                                    dadosArq = dataTam.decode()
-                                    print(dadosArq)
-                                    listaDados = dadosArq.split(':')
-                                    arquivo  = listaDados[0]
-                                    tamArq = listaDados[1]
-                                    bytesArq = listaDados[2]
-                                    if bytesArq == "":
-                                        tamArq = int(tamArq)
-                                        print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                                        pedir_arquivo(arquivo, tamArq)
-                                        laco = False
-                                        time.sleep(0.5)
-                                    else:
-                                        tamArq = int(tamArq)
-                                        print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                                        if os.path.exists(DIRETORIO + arquivo):
-                                            resp = input(f"O arquivo '{arquivo}' já existe, deseja sobrescrever? S ou N: ")
-                                            if resp != "s" and resp != "S":
-                                                print("Operação cancelada.")
-                                                laco = False
-                                        else:
-                                            print(f"Substituindo o arquivo '{arquivo}'...")
-                                            
-                                    
-                                        if tamArq > 0:
-                                            print(f"Salvando o arquivo '{arquivo}' localmente...")
-                                            with open(DIRETORIO + arquivo, "wb") as fd:
-                                                recebido = 0
-                                                while recebido < tamArq:
-                                                    data = bytesArq
-                                                    fd.write(data)
-                                                    print("Lidos:", recebido, "bytes")
-                                                    recebido += len(data)
-                                                print(f"O arquivo '{arquivo}' foi recebido com sucesso.\n")
-                                                time.sleep(2)
-                                                print("Voltando ao menu principal...\n")
-                                                laco = False
-                                        laco = False
-                                        time.sleep(0.5)
+                    if os.path.exists(caminho_arquivo):
+                        resposta = input(f"O arquivo '{nome_arquivo}' já existe. Deseja sobrescrevê-lo? (s/n): ").strip().lower()
+                        if resposta != 's':
+                            print(f"Arquivo '{nome_arquivo}' não será sobrescrito. Pulando...")
+                            continue  # Não sobrescreve o arquivo e passa para o próximo
+        
+                # Receber conteúdo do arquivo
+                    with open(nome_arquivo, 'wb') as f:
+                        recebido = 0
+                        while recebido < tamanho_arquivo:
+                            dados = tcpSock.recv(min(4096, tamanho_arquivo - recebido))
+                            if not dados:
+                                break
+                            f.write(dados)
+                            recebido += len(dados)
+        
+                    print(f"Arquivo '{nome_arquivo}' recebido com sucesso.")
 
 
             elif nomeArq== "hash":
