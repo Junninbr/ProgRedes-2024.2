@@ -117,58 +117,63 @@ while True:
                     else:
                         print("Enviando pedido a", (SERVER, PORT), "para todos os arquivos contendo", arquivo)
                         tcpSock.send(arquivo.encode('utf-8'))
-
                         dataTam = tcpSock.recv(2048)
-                        resposta = str(dataTam.decode('utf-8'))
-
-                        laco = True
-                        while laco:   
-
-                            
-                            dataTam = tcpSock.recv(2048)
-                            print('teste: ', dataTam)
+                        qtd_arquivos = str(dataTam.decode())
                         
-                            if dataTam == b'Encerrado':
-                                print(f'Todos os arquivos foram recebidos com sucesso!')
-                                break
-                            else:
-                                dadosArq = dataTam.decode()
-                                print(dadosArq)
-                                arquivo, tamArq, bytesArq = dadosArq.split(':')
+                        for quantidade in qtd_arquivos:
+                            dataTam = tcpSock.recv(2048)
+                            resposta = str(dataTam.decode('utf-8'))
 
-                                if bytesArq == " ":
-                                    tamArq = int(tamArq)
-                                    print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                                    pedir_arquivo(arquivo, tamArq)
-                                    laco = False
-                                    time.sleep(0.5)
-                                else:
-                                    tamArq = int(tamArq)
-                                    print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
-                                    if os.path.exists(DIRETORIO + arquivo):
-                                        resp = input(f"O arquivo '{arquivo}' já existe, deseja sobrescrever? S ou N: ")
-                                        if resp != "s" and resp != "S":
-                                            print("Operação cancelada.")
-                                            laco = False
-                                    else:
-                                        print(f"Substituindo o arquivo '{arquivo}'...")
-                                        
+                            laco = True
+                            while laco:   
+
                                 
-                                    if tamArq > 0:
-                                        print(f"Salvando o arquivo '{arquivo}' localmente...")
-                                        with open(DIRETORIO + arquivo, "wb") as fd:
-                                            recebido = 0
-                                            while recebido < tamArq:
-                                                data = bytesArq
-                                                fd.write(data)
-                                                print("Lidos:", recebido, "bytes")
-                                                recebido += len(data)
-                                            print(f"O arquivo '{arquivo}' foi recebido com sucesso.\n")
-                                            time.sleep(2)
-                                            print("Voltando ao menu principal...\n")
-                                            laco = False
-                                    laco = False
-                                    time.sleep(0.5)
+                                dataTam = tcpSock.recv(2048)
+                                print('teste: ', dataTam)
+                            
+                                if dataTam == b'Encerrado':
+                                    print(f'Todos os arquivos foram recebidos com sucesso!')
+                                    break
+                                else:
+                                    dadosArq = dataTam.decode()
+                                    print(dadosArq)
+                                    listaDados = dadosArq.split(':')
+                                    arquivo  = listaDados[0]
+                                    tamArq = listaDados[1]
+                                    bytesArq = listaDados[2]
+                                    if bytesArq == "":
+                                        tamArq = int(tamArq)
+                                        print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                                        pedir_arquivo(arquivo, tamArq)
+                                        laco = False
+                                        time.sleep(0.5)
+                                    else:
+                                        tamArq = int(tamArq)
+                                        print(f"O arquivo '{arquivo}' possui o tamanho de {tamArq} Bytes.")
+                                        if os.path.exists(DIRETORIO + arquivo):
+                                            resp = input(f"O arquivo '{arquivo}' já existe, deseja sobrescrever? S ou N: ")
+                                            if resp != "s" and resp != "S":
+                                                print("Operação cancelada.")
+                                                laco = False
+                                        else:
+                                            print(f"Substituindo o arquivo '{arquivo}'...")
+                                            
+                                    
+                                        if tamArq > 0:
+                                            print(f"Salvando o arquivo '{arquivo}' localmente...")
+                                            with open(DIRETORIO + arquivo, "wb") as fd:
+                                                recebido = 0
+                                                while recebido < tamArq:
+                                                    data = bytesArq
+                                                    fd.write(data)
+                                                    print("Lidos:", recebido, "bytes")
+                                                    recebido += len(data)
+                                                print(f"O arquivo '{arquivo}' foi recebido com sucesso.\n")
+                                                time.sleep(2)
+                                                print("Voltando ao menu principal...\n")
+                                                laco = False
+                                        laco = False
+                                        time.sleep(0.5)
 
 
             elif nomeArq== "hash":
