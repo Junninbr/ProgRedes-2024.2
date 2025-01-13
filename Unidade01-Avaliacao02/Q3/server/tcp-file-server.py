@@ -103,19 +103,22 @@ while True:
                         client_socket.sendall(b'Arquivos encontrados. Iniciando envio...')
                         for file_path in files:
                             if in_directory(DIRETORIO, file_path):
-                                filename = os.path.basename(file_path) # Nome do arquivo 
-                                file_size = os.path.getsize(file_path) # Tamanho do arquivo
-                                print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
-                                envio = client_socket.sendall(f"{filename}:{file_size}:".encode()) 
-                                print(envio)
-                                # Envio do conteúdo do arquivo
-                                with open (file_path, 'rb') as file: 
-                                    while chunk := file.read(4096):
-                                        client_socket.sendall(chunk)
-                                print(f'Arquivo {filename} enviado com sucesso ao cliente {client_address} ')
+                                filename = os.path.basename(file_path)
+                                file_size = os.path.getsize(file_path)
+                        print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
+                        client_socket.sendall(f"{filename}:{file_size}\n".encode()) # Enviando o nome e o tamanho do arquivo
+            
+                    # Enviar conteúdo do arquivo
+                    with open(file_path, 'rb') as file:
+                        while chunk := file.read(4096):
+                            client_socket.sendall(chunk)
+                    client_socket.sendall(b'FINAL\n') # Delimita o fim do arquivo
+                    print(f'Arquivo {filename} enviado com sucesso ao cliente {client_address}')
+                    time.sleep(0.5)
     
-                            time.sleep(0.5)
-                        client_socket.sendall(b'Encerrado')
+                # Avisa ao cliente que encerrou a transferencia dos arquivos
+                    client_socket.sendall(b'Encerrado\n')
+                    time.sleep(0.5)
                 except FileNotFoundError:
                     print(f'A máscara digitada pelo cliente não está associada a nenhum dos arquivos do servidor! Portanto, não é possível enviar arquivos associados a mesma.')    
                     client_socket.sendall(b'0')
