@@ -25,7 +25,7 @@ def in_directory(base_directory, file_path):
     if '..' in real_path.split(os.sep):
             client_socket(f"ERRO! O arquivo {file_path} contém '..', o que é proibido por questões de segurança.".encode('utf-8'))
             return False
-    return real_path.startswitch(base_directory) # Verifica se o caminho real do arquivo está dentro do diretório base
+    return real_path.startswith(os.path.realpath(base_directory)) # Verifica se o caminho real do arquivo está dentro do diretório base
 
 # Função para cálcular o hash, apresentada nos comandos hash e eget
 def calcular_hash(file_path, tamanho=None):
@@ -104,7 +104,8 @@ while True:
                                 filename = os.path.basename(file_path) # Nome do arquivo 
                                 file_size = os.path.getsize(file_path) # Tamanho do arquivo
                                 print(f"Enviando arquivo '{filename}' ({file_size} bytes) ao cliente {client_address}")
-                                client_socket.sendall(f"{filename}:{file_size}\0".encode()) 
+                                envio = client_socket.sendall(f"{filename}:{file_size}:".encode()) 
+                                print(envio)
                                 # Envio do conteúdo do arquivo
                                 with open (file_path, 'rb') as file: 
                                     while chunk := file.read(4096):
@@ -112,7 +113,7 @@ while True:
                                 print(f'Arquivo {filename} enviado com sucesso ao cliente {client_address} ')
     
                             time.sleep(0.5)
-                        client_socket.sendall(b'Arquivos enviados com sucesso!')
+                        client_socket.sendall(b'Encerrado')
                 except FileNotFoundError:
                     print(f'A máscara digitada pelo cliente não está associada a nenhum dos arquivos do servidor! Portanto, não é possível enviar arquivos associados a mesma.')    
                     client_socket.sendall(b'0')
@@ -179,8 +180,8 @@ while True:
                         in_directory(DIRETORIO, file_path)
 
                                 
-  except ConnectionResetError:
-                print("Conexão perdida com o servidor, reinicie o programa para tentar uma nova conexão.")
+    except ConnectionResetError:
+        print("Conexão perdida com o servidor, reinicie o programa para tentar uma nova conexão.")
 
 
 
