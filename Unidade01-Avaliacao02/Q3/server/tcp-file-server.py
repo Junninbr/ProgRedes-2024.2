@@ -97,6 +97,8 @@ while True:
                 # Obtém a lista dos arquivos pertencentes a máscara 
                 try:
                     files = glob.glob(os.path.join(DIRETORIO, mask))
+                    qtd_files= len(files) # Quantidade de arquivos que atendem a máscara
+                    client_socket.sendall(f'{qtd_files}'.encode())
                     if files:
                         client_socket.sendall(b'Arquivos encontrados. Iniciando envio...')
                         for file_path in files:
